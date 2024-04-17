@@ -78,7 +78,9 @@ func RequestCovenantSignaure(
 	}
 
 	var response PublicResponse[SignUnbondingTxResponse]
-	json.Unmarshal(resBody, &response)
+	if err := json.Unmarshal(resBody, &response); err != nil {
+		return nil, err
+	}
 
 	return utils.SchnorSignatureFromHex(response.Data.SignatureHex)
 }
