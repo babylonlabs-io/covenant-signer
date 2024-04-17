@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/babylonchain/covenant-signer/internal/config"
-	"github.com/babylonchain/covenant-signer/internal/logger"
-	"github.com/babylonchain/covenant-signer/internal/services/signer"
+	"github.com/babylonchain/covenant-signer/btcclient"
+	"github.com/babylonchain/covenant-signer/config"
+	"github.com/babylonchain/covenant-signer/logger"
+	"github.com/babylonchain/covenant-signer/signerapp"
+	"github.com/babylonchain/covenant-signer/signerservice"
 	"github.com/spf13/cobra"
 )
 
@@ -22,18 +21,49 @@ var runSignerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Println(path)
 		cfg, err := config.GetConfig(path)
-		fmt.Println(cfg)
 		if err != nil {
 			return err
 		}
-		ctx := context.Background()
+
+		parsedConfig, err := cfg.Parse()
+
+		if err != nil {
+			return err
+		}
 		log := logger.DefaultLogger()
-		srv, err := signer.New(
-			ctx,
+
+		fullNodeClient, err := btcclient.NewBtcClient(parsedConfig.BtcNodeConfig)
+
+		if err != nil {
+			return err
+		}
+
+		chainInfo := signerapp.NewBitcoindChainInfo(fullNodeClient)
+
+		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
+
+		if err != nil {
+			return err
+		}
+
+		signer := signerapp.NewPsbtSigner(signerClient)
+
+		paramsGetter := signerapp.NewConfigParamsRetriever(parsedConfig.ParamsConfig)
+
+		app := signerapp.NewSignerApp(
 			log,
-			nil,
+			signer,
+			chainInfo,
+			paramsGetter,
+			parsedConfig.BtcNodeConfig.Network,
+		)
+
+		srv, err := signerservice.New(
+			cmd.Context(),
+			log,
+			parsedConfig,
+			app,
 		)
 
 		if err != nil {
