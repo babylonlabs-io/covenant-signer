@@ -15,7 +15,7 @@ type Config struct {
 	// TODO: Separate config for signing node and for full node
 	BtcNodeConfig   BtcConfig    `mapstructure:"btc-config"`
 	BtcSignerConfig BtcConfig    `mapstructure:"btc-signer-config"`
-	Params          ParamsConfig `mapstructure:"params-config"`
+	SignerConfig    SignerConfig `mapstructure:"signer-config"`
 	Server          ServerConfig `mapstructure:"server-config"`
 }
 
@@ -23,7 +23,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		BtcNodeConfig:   *DefaultBtcConfig(),
 		BtcSignerConfig: *DefaultBtcConfig(),
-		Params:          *DefaultParamsConfig(),
+		SignerConfig:    *DefaultSignerConfig(),
 		Server:          *DefaultServerConfig(),
 	}
 }
@@ -31,7 +31,7 @@ func DefaultConfig() *Config {
 type ParsedConfig struct {
 	BtcNodeConfig   *ParsedBtcConfig
 	BtcSignerConfig *ParsedBtcConfig
-	ParamsConfig    *ParsedParamsConfig
+	SignerConfig    *SignerConfig
 	ServerConfig    *ParsedServerConfig
 }
 
@@ -47,12 +47,6 @@ func (cfg *Config) Parse() (*ParsedConfig, error) {
 		return nil, err
 	}
 
-	paramsConfig, err := cfg.Params.Parse()
-
-	if err != nil {
-		return nil, err
-	}
-
 	serverConfig, err := cfg.Server.Parse()
 
 	if err != nil {
@@ -62,8 +56,8 @@ func (cfg *Config) Parse() (*ParsedConfig, error) {
 	return &ParsedConfig{
 		BtcNodeConfig:   btcConfig,
 		BtcSignerConfig: btcSignerConfig,
-		ParamsConfig:    paramsConfig,
 		ServerConfig:    serverConfig,
+		SignerConfig:    &cfg.SignerConfig,
 	}, nil
 }
 
@@ -97,24 +91,10 @@ pass = "{{ .BtcSignerConfig.Pass }}"
 # Btc network (testnet3|mainnet|regtest|simnet|signet)
 network = "{{ .BtcSignerConfig.Network }}"
 
-[params-config]
-# The list of covenant public keys
-covenant_public_keys = [{{ range .Params.CovenantPublicKeys }}{{ printf "%q, " . }}{{end}}]
-
-# The quorum of the covenants required to sign the transaction
-covenant_quorum = {{ .Params.CovenantQuorum }}
-
-# The magic bytes of the network
-magic_bytes = "{{ .Params.MagicBytes }}"
-
-# The number of confirmations required for the staking transaction to be mature
-w = {{ .Params.W }}
-
-# Timelock in unbonding transaction
-unbonding_time = {{ .Params.UnbondingTime }}
-
-# Required fee for unbonding transaction
-unbonding_fee = {{ .Params.UnbondingFee }}
+[signer-config]
+# required depth of staking transaction before signing of the unbonding transaction
+# will be allowed
+staking-tx-confirmation-depth = {{ .SignerConfig.StakingTxConfirmationDepth }}
 
 [server-config]
 # The address to listen on
