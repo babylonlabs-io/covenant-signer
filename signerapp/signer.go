@@ -141,7 +141,6 @@ func (s *SignerApp) SignUnbondingTransaction(
 	if err != nil {
 		return nil, err
 	}
-
 	bestBlock, err := s.r.BestBlockHeight(ctx)
 
 	if err != nil {
@@ -156,12 +155,17 @@ func (s *SignerApp) SignUnbondingTransaction(
 		return nil, err
 	}
 
-	stakingTxDepth := bestBlock - stakingTxInfo.TxInclusionHeight
+	// We are using signed numbers here as calls to:
+	// - TxByHash
+	// - BestBlockHeight
+	// are not atomic. This means if we do them during underlying node re-org
+	// we may hit the case where stakingTxInfo.TxInclusionHeight is higher than bestBlock.
+	numberOfStakingTxConfirmations := (int64(bestBlock) - int64(stakingTxInfo.TxInclusionHeight)) + 1
 
-	if stakingTxDepth < uint32(params.ConfirmationDepth) {
+	if numberOfStakingTxConfirmations < int64(params.ConfirmationDepth) {
 		return nil, fmt.Errorf(
-			"staking tx not deep enough. Current depth: %d, required depth: %d",
-			stakingTxDepth,
+			"staking tx does not have enough confirmations. Current confirmations: %d, required confirmations: %d",
+			numberOfStakingTxConfirmations,
 			params.ConfirmationDepth,
 		)
 	}
