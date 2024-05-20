@@ -261,8 +261,8 @@ func (tm *TestManager) sendStakingTxToBtc(d *stakingData) *stakingTxSigInfo {
 
 	hash, err := tm.btcClient.SendTx(tx)
 	require.NoError(tm.t, err)
-	// generate blocks to make sure tx will be included into chain
-	_ = tm.bitcoindHandler.GenerateBlocks(int(tm.confirmationDepth + 1))
+	// generate exact amount of block to confirm staking tx
+	_ = tm.bitcoindHandler.GenerateBlocks(int(tm.confirmationDepth))
 	return &stakingTxSigInfo{
 		stakingTxHash: hash,
 		stakingOutput: info.StakingOutput,
