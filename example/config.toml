@@ -28,11 +28,6 @@ pass = "pass"
 # Btc network (testnet3|mainnet|regtest|simnet|signet)
 network = "regtest"
 
-[signer-config]
-# required depth of staking transaction before signing of the unbonding transaction
-# will be allowed
-staking-tx-confirmation-depth = 6
-
 [server-config]
 # The address to listen on
 host = "127.0.0.1"
@@ -49,3 +44,8 @@ write-timeout = 15
 # Idle timeout in seconds
 idle-timeout = 120
 
+[metrics]
+# The prometheus server host
+host = "127.0.0.1"
+# The prometheus server port
+port = 2112

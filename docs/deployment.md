@@ -372,11 +372,19 @@ pass = <bitcoind_wallet_password>
 # Btc network (testnet3|mainnet|regtest|signet)
 network = <btc_network>
 
+#### Parameters related to the Covenant Signer server
 [server-config]
 # The address to listen on
 host = "127.0.0.1"
 # The port to listen on
 port = 9791
+
+#### Parameters related to the Prometheus metrics server
+[metrics]
+# The prometheus server host
+host = "127.0.0.1"
+# The prometheus server port
+port = 2112
 ```
 
 The Covenant Signer also consumes an additional configuration file containing
@@ -412,8 +420,32 @@ A successful signing request emits the following log pair:
 
 ### 4.6. Monitoring
 
+#### Built-in Prometheus metrics
+
+The service exposes Prometheus metrics through a Prometheus server. By default,
+the server is reachable under `127.0.0.1:2112`.
+
+The following metrics are exposed:
+- `signer_received_signing_requests`: The total number of signing requests
+  received by the server
+- `signer_succeeded_signing_requests`: The total number times the signer
+  successfully responded with a signature
+- `signer_failed_signing_requests`: The total number of times signer responded
+  with an internal error
+
+These metrics can be scraped by a Prometheus instance.
+
+A simple Prometheus alerting rule to check for failed signing request follows
+below:
+
+```shell
+signer_failed_signing_requests - signer_failed_signing_requests offset 60m > 0
+```
+
+#### HTTP Healthchecks
+
 Healthchecks should be configured on the `/v1/sign-unbonding-tx` server HTTP
-endpoint.
+endpoint. By default, the server is reachable under `127.0.0.1:9791`.
 
 One approach to perform HTTP/S healthchecks and expose results in the form of
 Prometheus metrics is the

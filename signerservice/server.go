@@ -3,10 +3,12 @@ package signerservice
 import (
 	"context"
 	"fmt"
+	"net/http"
+
+	m "github.com/babylonchain/covenant-signer/observability/metrics"
 	"github.com/babylonchain/covenant-signer/signerservice/handlers"
 	"github.com/babylonchain/covenant-signer/signerservice/middlewares"
 	"github.com/rs/zerolog/log"
-	"net/http"
 
 	"github.com/babylonchain/covenant-signer/config"
 	s "github.com/babylonchain/covenant-signer/signerapp"
@@ -27,6 +29,7 @@ func New(
 	ctx context.Context,
 	cfg *config.ParsedConfig,
 	signer *s.SignerApp,
+	metrics *m.CovenantSignerMetrics,
 ) (*SigningServer, error) {
 	r := chi.NewRouter()
 
@@ -46,7 +49,7 @@ func New(
 		Handler:      r,
 	}
 
-	h, err := handlers.NewHandler(ctx, signer)
+	h, err := handlers.NewHandler(ctx, signer, metrics)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while setting up handlers")
 	}
