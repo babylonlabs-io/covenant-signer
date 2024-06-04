@@ -13,9 +13,10 @@ import (
 
 type Config struct {
 	// TODO: Separate config for signing node and for full node
-	BtcNodeConfig   BtcConfig    `mapstructure:"btc-config"`
-	BtcSignerConfig BtcConfig    `mapstructure:"btc-signer-config"`
-	Server          ServerConfig `mapstructure:"server-config"`
+	BtcNodeConfig   BtcConfig     `mapstructure:"btc-config"`
+	BtcSignerConfig BtcConfig     `mapstructure:"btc-signer-config"`
+	Server          ServerConfig  `mapstructure:"server-config"`
+	Metrics         MetricsConfig `mapstructure:"metrics"`
 }
 
 func DefaultConfig() *Config {
@@ -23,6 +24,7 @@ func DefaultConfig() *Config {
 		BtcNodeConfig:   *DefaultBtcConfig(),
 		BtcSignerConfig: *DefaultBtcConfig(),
 		Server:          *DefaultServerConfig(),
+		Metrics:         *DefaultMetricsConfig(),
 	}
 }
 
@@ -30,6 +32,7 @@ type ParsedConfig struct {
 	BtcNodeConfig   *ParsedBtcConfig
 	BtcSignerConfig *ParsedBtcConfig
 	ServerConfig    *ParsedServerConfig
+	MetricsConfig   *ParsedMetricsConfig
 }
 
 func (cfg *Config) Parse() (*ParsedConfig, error) {
@@ -50,10 +53,17 @@ func (cfg *Config) Parse() (*ParsedConfig, error) {
 		return nil, err
 	}
 
+	metricsConfig, err := cfg.Metrics.Parse()
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &ParsedConfig{
 		BtcNodeConfig:   btcConfig,
 		BtcSignerConfig: btcSignerConfig,
 		ServerConfig:    serverConfig,
+		MetricsConfig:   metricsConfig,
 	}, nil
 }
 
@@ -103,6 +113,11 @@ write-timeout = {{ .Server.WriteTimeout }}
 # Idle timeout in seconds
 idle-timeout = {{ .Server.IdleTimeout }}
 
+[metrics]
+# The prometheus server host
+host = "{{ .Metrics.Host }}"
+# The prometheus server port
+port = {{ .Metrics.Port }}
 `
 
 var configTemplate *template.Template

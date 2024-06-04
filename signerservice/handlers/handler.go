@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"context"
-	s "github.com/babylonchain/covenant-signer/signerapp"
 	"net/http"
+
+	m "github.com/babylonchain/covenant-signer/observability/metrics"
+	s "github.com/babylonchain/covenant-signer/signerapp"
 )
 
 type Handler struct {
 	s *s.SignerApp
+	m *m.CovenantSignerMetrics
 }
 
 type Result struct {
@@ -25,9 +28,10 @@ func NewResult[T any](data T) *Result {
 }
 
 func NewHandler(
-	_ context.Context, s *s.SignerApp,
+	_ context.Context, s *s.SignerApp, m *m.CovenantSignerMetrics,
 ) (*Handler, error) {
 	return &Handler{
 		s: s,
+		m: m,
 	}, nil
 }

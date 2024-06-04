@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/babylonchain/covenant-signer/btcclient"
 	"github.com/babylonchain/covenant-signer/config"
+	m "github.com/babylonchain/covenant-signer/observability/metrics"
 	"github.com/babylonchain/covenant-signer/signerapp"
 	"github.com/babylonchain/covenant-signer/signerservice"
 )
@@ -62,15 +65,22 @@ var runSignerCmd = &cobra.Command{
 			parsedConfig.BtcNodeConfig.Network,
 		)
 
+		metrics := m.NewCovenantSignerMetrics()
+
 		srv, err := signerservice.New(
 			cmd.Context(),
 			parsedConfig,
 			app,
+			metrics,
 		)
 
 		if err != nil {
 			return err
 		}
+
+		metricsAddress := fmt.Sprintf("%s:%d", cfg.Metrics.Host, cfg.Metrics.Port)
+
+		m.Start(metricsAddress, metrics.Registry)
 
 		// TODO: Add signal handling and gracefull shutdown
 		return srv.Start()
