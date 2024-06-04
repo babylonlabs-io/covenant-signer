@@ -23,6 +23,7 @@ import (
 	"github.com/babylonchain/covenant-signer/btcclient"
 	"github.com/babylonchain/covenant-signer/config"
 	"github.com/babylonchain/covenant-signer/itest/containers"
+	"github.com/babylonchain/covenant-signer/observability/metrics"
 	"github.com/babylonchain/covenant-signer/signerapp"
 	"github.com/babylonchain/covenant-signer/signerservice"
 )
@@ -183,10 +184,13 @@ func StartManager(
 		netParams,
 	)
 
+	met := metrics.NewCovenantSignerMetrics()
+
 	server, err := signerservice.New(
 		context.Background(),
 		parsedconfig,
 		app,
+		met,
 	)
 
 	require.NoError(t, err)

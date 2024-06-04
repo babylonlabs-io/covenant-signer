@@ -57,6 +57,9 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "invalid staker unbonding signature")
 	}
 
+	// do not count the requests with invalid arguments
+	h.m.IncReceivedSigningRequests()
+
 	sig, err := h.s.SignUnbondingTransaction(
 		request.Context(),
 		pkScript,
@@ -66,6 +69,7 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 	)
 
 	if err != nil {
+		h.m.IncFailedSigningRequests()
 		// TODO Properly translate errors between layers
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
@@ -73,6 +77,8 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 	resp := types.SignUnbondingTxResponse{
 		SignatureHex: hex.EncodeToString(sig.Serialize()),
 	}
+
+	h.m.IncSuccessfulSigningRequests()
 
 	return NewResult(resp), nil
 }
