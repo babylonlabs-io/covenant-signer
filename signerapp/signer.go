@@ -3,6 +3,7 @@ package signerapp
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/babylonchain/babylon/btcstaking"
@@ -10,62 +11,9 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 )
-
-type SpendPathDescription struct {
-	ControlBlock *txscript.ControlBlock
-	ScriptLeaf   *txscript.TapLeaf
-}
-
-type SigningRequest struct {
-	StakingOutput        *wire.TxOut
-	UnbondingTransaction *wire.MsgTx
-	CovenantPublicKey    *btcec.PublicKey
-	CovenantAddress      btcutil.Address
-	SpendDescription     *SpendPathDescription
-}
-
-type SigningResult struct {
-	Signature *schnorr.Signature
-}
-
-type ExternalBtcSigner interface {
-	RawSignature(ctx context.Context, request *SigningRequest) (*SigningResult, error)
-}
-
-type TxInfo struct {
-	Tx                *wire.MsgTx
-	TxInclusionHeight uint32
-}
-
-type BtcChainInfo interface {
-	// Returns only transactions inluded in canonical chain
-	// passing pkScript as argument make it light client friendly
-	TxByHash(ctx context.Context, txHash *chainhash.Hash, pkScript []byte) (*TxInfo, error)
-
-	BestBlockHeight(ctx context.Context) (uint32, error)
-}
-
-type BabylonParams struct {
-	CovenantPublicKeys []*btcec.PublicKey
-	CovenantQuorum     uint32
-	MagicBytes         []byte
-	UnbondingTime      uint16
-	UnbondingFee       btcutil.Amount
-	MaxStakingAmount   btcutil.Amount
-	MinStakingAmount   btcutil.Amount
-	MaxStakingTime     uint16
-	MinStakingTime     uint16
-	ConfirmationDepth  uint16
-}
-
-type BabylonParamsRetriever interface {
-	// ParamsByHeight
-	ParamsByHeight(ctx context.Context, height uint64) (*BabylonParams, error)
-}
 
 type SignerApp struct {
 	s   ExternalBtcSigner
@@ -98,6 +46,16 @@ func (s *SignerApp) pubKeyToAddress(pubKey *btcec.PublicKey) (btcutil.Address, e
 		return nil, err
 	}
 	return witnessAddr, nil
+}
+
+func isCovenantMember(pubKey *btcec.PublicKey, covenantKeys []*btcec.PublicKey) bool {
+	for _, key := range covenantKeys {
+		if pubKey.IsEqual(key) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func outputsAreEqual(a *wire.TxOut, b *wire.TxOut) bool {
@@ -153,6 +111,13 @@ func (s *SignerApp) SignUnbondingTransaction(
 
 	if err != nil {
 		return nil, err
+	}
+
+	if !isCovenantMember(covnentSignerPubKey, params.CovenantPublicKeys) {
+		return nil, fmt.Errorf("received covenant public key %s is not committee member at height %d",
+			hex.EncodeToString(covnentSignerPubKey.SerializeCompressed()),
+			stakingTxInfo.TxInclusionHeight,
+		)
 	}
 
 	// We are using signed numbers here as calls to:
