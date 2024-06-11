@@ -48,6 +48,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/btcsuite/btcwallet/wallet/txauthor v1.3.4
 	github.com/go-chi/chi/v5 v5.0.12
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.4.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/rs/zerolog v1.32.0
