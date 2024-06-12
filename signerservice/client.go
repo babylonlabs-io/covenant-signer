@@ -19,6 +19,11 @@ import (
 	"github.com/btcsuite/btcd/wire"
 )
 
+const (
+	// 1MB should be enough for the response
+	maxResponseSize = 1 << 20 // 1MB
+)
+
 func RequestCovenantSignaure(
 	ctx context.Context,
 	signerUrl string,
@@ -72,16 +77,19 @@ func RequestCovenantSignaure(
 		return nil, err
 	}
 
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
-	}
-
 	defer res.Body.Close()
-	// read body
-	resBody, err := io.ReadAll(res.Body)
+
+	maxSizeReader := http.MaxBytesReader(nil, res.Body, maxResponseSize)
+
+	// read body, up to 1MB
+	resBody, err := io.ReadAll(maxSizeReader)
 
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("signigning request failed. status code: %d, message: %s", res.StatusCode, string(resBody))
 	}
 
 	var response handlers.PublicResponse[types.SignUnbondingTxResponse]
