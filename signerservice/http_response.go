@@ -2,10 +2,11 @@ package signerservice
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/babylonchain/covenant-signer/signerservice/handlers"
 	"github.com/babylonchain/covenant-signer/signerservice/types"
 	logger "github.com/rs/zerolog"
-	"net/http"
 )
 
 type ErrorResponse struct {
@@ -79,5 +80,7 @@ func writeResponse(
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	w.Write(respBytes) // nolint:errcheck
+	if _, err := w.Write(respBytes); err != nil {
+		logger.Ctx(r.Context()).Err(err).Msg("failed to write response")
+	}
 }
