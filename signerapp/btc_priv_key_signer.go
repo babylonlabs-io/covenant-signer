@@ -34,6 +34,8 @@ func (s *PrivKeySigner) RawSignature(ctx context.Context, request *SigningReques
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve covenant key for signing: %w", err)
 	}
+	// Zero key after signing
+	defer key.Zero()
 
 	sig, err := btcstaking.SignTxWithOneScriptSpendInputFromTapLeaf(
 		request.UnbondingTransaction,
@@ -45,9 +47,6 @@ func (s *PrivKeySigner) RawSignature(ctx context.Context, request *SigningReques
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
-
-	// zero the key after signing
-	key.Zero()
 
 	return &SigningResult{
 		Signature: sig,
