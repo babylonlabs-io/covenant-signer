@@ -237,7 +237,7 @@ Notes:
   `-datadir=/path/to/bitcoin/home` flag in all the above `bitcoin-cli` commands.
 - The BTC public key of the covenant should be included in the global
   parameters of the network you operate in order for your covenant emulator to
-  be included in the committee. 
+  be included in the committee.
 
 ### 3.2. Unlock the wallet
 
@@ -290,6 +290,7 @@ storing them in separate places.
 - The port accepts only TLS traffic (can be achieved by exposing the Covenant
   Signer through a reverse proxy)
 - Ideally, the Covenant Signer is also protected against DDoS attacks
+- Ideally, request size is also limited at reverse proxy level
 
 ### 4.3. Installation
 
@@ -378,6 +379,8 @@ network = <btc_network>
 host = "127.0.0.1"
 # The port to listen on
 port = 9791
+# Max content length in bytes
+max-content-length = 8192
 
 #### Parameters related to the Prometheus metrics server
 [metrics]

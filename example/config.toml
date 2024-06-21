@@ -44,6 +44,9 @@ write-timeout = 15
 # Idle timeout in seconds
 idle-timeout = 120
 
+# Max content length in bytes
+max-content-length = 8192
+
 [metrics]
 # The prometheus server host
 host = "127.0.0.1"
