@@ -113,6 +113,9 @@ write-timeout = {{ .Server.WriteTimeout }}
 # Idle timeout in seconds
 idle-timeout = {{ .Server.IdleTimeout }}
 
+# Max content length in bytes
+max-content-length = {{ .Server.MaxContentLength }}
+
 [metrics]
 # The prometheus server host
 host = "{{ .Metrics.Host }}"

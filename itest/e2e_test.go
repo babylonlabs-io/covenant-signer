@@ -4,14 +4,19 @@
 package e2etest
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"math/rand"
+	"net/http"
 	"testing"
 	"time"
 
 	"github.com/babylonchain/babylon/btcstaking"
 	staking "github.com/babylonchain/babylon/btcstaking"
+	"github.com/babylonchain/babylon/testutil/datagen"
 	"github.com/babylonchain/networks/parameters/parser"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
@@ -26,6 +31,7 @@ import (
 	"github.com/babylonchain/covenant-signer/observability/metrics"
 	"github.com/babylonchain/covenant-signer/signerapp"
 	"github.com/babylonchain/covenant-signer/signerservice"
+	"github.com/babylonchain/covenant-signer/signerservice/types"
 )
 
 var (
@@ -372,4 +378,38 @@ func TestSigningUnbondingTx(t *testing.T) {
 		sig.Serialize(),
 	)
 	require.NoError(t, err)
+}
+
+func TestRejectToLargeRequest(t *testing.T) {
+	tm := StartManager(t, 100)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	tmContentLimit := tm.signerConfig.Server.MaxContentLength
+	size := tmContentLimit + 1
+	tooLargeTx := datagen.GenRandomByteArray(r, uint64(size))
+
+	req := types.SignUnbondingTxRequest{
+		StakingOutputPkScriptHex: "",
+		UnbondingTxHex:           hex.EncodeToString(tooLargeTx),
+		StakerUnbondingSigHex:    "",
+		CovenantPublicKey:        "",
+	}
+
+	marshalled, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	route := fmt.Sprintf("%s/v1/sign-unbonding-tx", tm.SigningServerUrl())
+
+	httpRequest, err := http.NewRequestWithContext(context.Background(), "POST", route, bytes.NewReader(marshalled))
+	require.NoError(t, err)
+
+	// use json
+	httpRequest.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{Timeout: 10 * time.Second}
+	// send the request
+	res, err := client.Do(httpRequest)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusRequestEntityTooLarge, res.StatusCode)
 }
