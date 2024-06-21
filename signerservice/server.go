@@ -37,6 +37,7 @@ func New(
 	// r.Use(middlewares.CorsMiddleware(cfg))
 	r.Use(middlewares.TracingMiddleware)
 	r.Use(middlewares.LoggingMiddleware)
+	r.Use(middlewares.ContentLengthMiddleware(int64(cfg.ServerConfig.MaxContentLength)))
 	// TODO: TLS configuration if server is to be exposed over the internet, if it supposed to
 	// be behind some reverse proxy like nginx or cloudflare, then it's not needed.
 	// Probably it needs to be configurable
