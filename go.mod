@@ -43,7 +43,7 @@ require (
 )
 
 require (
-	github.com/babylonchain/networks/parameters v0.2.0
+	github.com/babylonchain/networks/parameters v0.2.1
 	github.com/btcsuite/btcd/btcutil/psbt v1.1.8
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/btcsuite/btcwallet/wallet/txauthor v1.3.4

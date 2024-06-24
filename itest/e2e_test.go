@@ -159,7 +159,7 @@ func StartManager(
 	}
 	testParams.CovenantQuorum = 2
 	testParams.UnbondingTime = 100
-	testParams.UnbondingFee = 10000
+	testParams.UnbondingFee = 1000
 	testParams.MinStakingTime = 10000
 	testParams.MaxStakingTime = 10000
 	testParams.MinStakingAmount = 10000
