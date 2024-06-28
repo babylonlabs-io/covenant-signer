@@ -2,8 +2,7 @@ package signerapp_test
 
 import (
 	"context"
-	"encoding/hex"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/babylonchain/babylon/btcstaking"
@@ -224,11 +223,5 @@ func TestErrRequestNotCovenantMember(t *testing.T) {
 
 	require.Error(t, err)
 	require.Nil(t, receivedSignature)
-
-	expectedError := fmt.Errorf("received covenant public key %s is not committee member at height %d",
-		hex.EncodeToString(unknownCovenantMember.PubKey().SerializeCompressed()),
-		200,
-	)
-
-	require.Equal(t, expectedError, err)
+	require.True(t, errors.Is(err, signerapp.ErrInvalidSigningRequest))
 }

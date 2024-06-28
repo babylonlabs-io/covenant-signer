@@ -380,6 +380,47 @@ func TestSigningUnbondingTx(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestProperResponseForInvalidRequest(t *testing.T) {
+	tm := StartManager(t, 100)
+
+	stakingData := defaultStakingData()
+
+	stakingTxInfo := tm.sendStakingTxToBtc(stakingData)
+
+	unb := tm.createUnbondingTx(stakingTxInfo, stakingData)
+
+	// staker signs unbonding tx
+	unbondingPathInfo, err := stakingTxInfo.stakingInfo.UnbondingPathSpendInfo()
+	require.NoError(t, err)
+
+	randomKey, err := btcec.NewPrivateKey()
+	require.NoError(t, err)
+
+	// We will send invalid signature in request, server should respond with
+	// bad request
+	badSig, err := btcstaking.SignTxWithOneScriptSpendInputFromTapLeaf(
+		unb.unbondingTx,
+		stakingTxInfo.stakingOutput,
+		randomKey,
+		unbondingPathInfo.RevealedLeaf,
+	)
+	require.NoError(t, err)
+
+	sig, err := signerservice.RequestCovenantSignaure(
+		context.Background(),
+		tm.SigningServerUrl(),
+		10*time.Second,
+		unb.unbondingTx,
+		badSig,
+		tm.localCovenantPubKey,
+		stakingTxInfo.stakingOutput.PkScript,
+	)
+
+	require.Error(t, err)
+	require.Nil(t, sig)
+	require.EqualError(t, err, "signing request failed. status code: 400, message: {\"errorCode\":\"BAD_REQUEST\",\"message\":\"staker unbonding signature verification failed: signature is not valid: invalid signing request\"}")
+}
+
 func TestRejectToLargeRequest(t *testing.T) {
 	tm := StartManager(t, 100)
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))

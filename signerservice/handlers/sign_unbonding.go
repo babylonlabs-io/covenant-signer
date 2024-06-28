@@ -3,8 +3,10 @@ package handlers
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/babylonchain/covenant-signer/signerapp"
 	"github.com/babylonchain/covenant-signer/signerservice/types"
 	"github.com/babylonchain/covenant-signer/utils"
 	"github.com/btcsuite/btcd/btcec/v2"
@@ -70,7 +72,12 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 
 	if err != nil {
 		h.m.IncFailedSigningRequests()
-		// TODO Properly translate errors between layers
+
+		if errors.Is(err, signerapp.ErrInvalidSigningRequest) {
+			return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, err.Error())
+		}
+
+		// if this is unknown error, return internal server error
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
 

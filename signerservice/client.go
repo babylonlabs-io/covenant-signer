@@ -89,7 +89,7 @@ func RequestCovenantSignaure(
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("signigning request failed. status code: %d, message: %s", res.StatusCode, string(resBody))
+		return nil, fmt.Errorf("signing request failed. status code: %d, message: %s", res.StatusCode, string(resBody))
 	}
 
 	var response handlers.PublicResponse[types.SignUnbondingTxResponse]
