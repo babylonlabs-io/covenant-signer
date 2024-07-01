@@ -15,6 +15,14 @@ import (
 	"github.com/btcsuite/btcd/wire"
 )
 
+var (
+	ErrInvalidSigningRequest = fmt.Errorf("invalid signing request")
+)
+
+func wrapInvalidSigningRequestError(err error) error {
+	return fmt.Errorf("%s: %w", err, ErrInvalidSigningRequest)
+}
+
 type SignerApp struct {
 	s   ExternalBtcSigner
 	r   BtcChainInfo
@@ -79,17 +87,17 @@ func (s *SignerApp) SignUnbondingTransaction(
 	covnentSignerPubKey *btcec.PublicKey,
 ) (*schnorr.Signature, error) {
 	if err := btcstaking.IsSimpleTransfer(unbondingTx); err != nil {
-		return nil, err
+		return nil, wrapInvalidSigningRequestError(err)
 	}
 
 	script, err := txscript.ParsePkScript(stakingOutputPkScript)
 
 	if err != nil {
-		return nil, err
+		return nil, wrapInvalidSigningRequestError(err)
 	}
 
 	if script.Class() != txscript.WitnessV1TaprootTy {
-		return nil, fmt.Errorf("invalid staking output pk script")
+		return nil, wrapInvalidSigningRequestError(fmt.Errorf("invalid staking output pk script"))
 	}
 
 	stakingTxHash := unbondingTx.TxIn[0].PreviousOutPoint.Hash
@@ -114,10 +122,10 @@ func (s *SignerApp) SignUnbondingTransaction(
 	}
 
 	if !isCovenantMember(covnentSignerPubKey, params.CovenantPublicKeys) {
-		return nil, fmt.Errorf("received covenant public key %s is not committee member at height %d",
+		return nil, wrapInvalidSigningRequestError(fmt.Errorf("received covenant public key %s is not committee member at height %d",
 			hex.EncodeToString(covnentSignerPubKey.SerializeCompressed()),
 			stakingTxInfo.TxInclusionHeight,
-		)
+		))
 	}
 
 	// We are using signed numbers here as calls to:
@@ -128,11 +136,11 @@ func (s *SignerApp) SignUnbondingTransaction(
 	numberOfStakingTxConfirmations := (int64(bestBlock) - int64(stakingTxInfo.TxInclusionHeight)) + 1
 
 	if numberOfStakingTxConfirmations < int64(params.ConfirmationDepth) {
-		return nil, fmt.Errorf(
+		return nil, wrapInvalidSigningRequestError(fmt.Errorf(
 			"staking tx does not have enough confirmations. Current confirmations: %d, required confirmations: %d",
 			numberOfStakingTxConfirmations,
 			params.ConfirmationDepth,
-		)
+		))
 	}
 
 	parsedStakingTransaction, err := btcstaking.ParseV0StakingTx(
@@ -143,13 +151,31 @@ func (s *SignerApp) SignUnbondingTransaction(
 		s.net)
 
 	if err != nil {
-		return nil, err
+		return nil, wrapInvalidSigningRequestError(err)
 	}
 
 	stakingOutputIndexFromUnbondingTx := unbondingTx.TxIn[0].PreviousOutPoint.Index
 
 	if stakingOutputIndexFromUnbondingTx != uint32(parsedStakingTransaction.StakingOutputIdx) {
-		return nil, fmt.Errorf("unbonding transaction has invalid input index")
+		return nil, wrapInvalidSigningRequestError(fmt.Errorf("unbonding transaction has invalid input index"))
+	}
+
+	if parsedStakingTransaction.OpReturnData.StakingTime < params.MinStakingTime ||
+		parsedStakingTransaction.OpReturnData.StakingTime > params.MaxStakingTime {
+		return nil, wrapInvalidSigningRequestError(
+			fmt.Errorf(
+				"staking time of staking tx with hash: %s is out of bounds",
+				stakingTxHash.String(),
+			),
+		)
+	}
+
+	if parsedStakingTransaction.StakingOutput.Value < int64(params.MinStakingAmount) ||
+		parsedStakingTransaction.StakingOutput.Value > int64(params.MaxStakingAmount) {
+		return nil, wrapInvalidSigningRequestError(fmt.Errorf(
+			"staking amount of staking tx with hash: %s is out of bounds",
+			stakingTxHash.String(),
+		))
 	}
 
 	expectedUnbondingOutputValue := parsedStakingTransaction.StakingOutput.Value - int64(params.UnbondingFee)
@@ -158,16 +184,6 @@ func (s *SignerApp) SignUnbondingTransaction(
 		// This is actually eror of our parameters configuaration and should not happen
 		// for honest requests.
 		return nil, fmt.Errorf("staking output value is too low")
-	}
-
-	if parsedStakingTransaction.OpReturnData.StakingTime < params.MinStakingTime ||
-		parsedStakingTransaction.OpReturnData.StakingTime > params.MaxStakingTime {
-		return nil, fmt.Errorf("staking time of staking tx with hash: %s is out of bounds", stakingTxHash.String())
-	}
-
-	if parsedStakingTransaction.StakingOutput.Value < int64(params.MinStakingAmount) ||
-		parsedStakingTransaction.StakingOutput.Value > int64(params.MaxStakingAmount) {
-		return nil, fmt.Errorf("staking amount of staking tx with hash: %s is out of bounds", stakingTxHash.String())
 	}
 
 	// build expected output in unbonding transaction
@@ -186,7 +202,9 @@ func (s *SignerApp) SignUnbondingTransaction(
 	}
 
 	if !outputsAreEqual(unbondingInfo.UnbondingOutput, unbondingTx.TxOut[0]) {
-		return nil, fmt.Errorf("unbonding output does not match expected output")
+		return nil, wrapInvalidSigningRequestError(
+			fmt.Errorf("unbonding output does not match expected output"),
+		)
 	}
 
 	// At this point we know that:
@@ -225,7 +243,12 @@ func (s *SignerApp) SignUnbondingTransaction(
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("staker unbonding signature verification failed: %w", err)
+		return nil, wrapInvalidSigningRequestError(
+			fmt.Errorf(
+				"staker unbonding signature verification failed: %w",
+				err,
+			),
+		)
 	}
 
 	covenantKeyAddress, err := s.pubKeyToAddress(covnentSignerPubKey)
