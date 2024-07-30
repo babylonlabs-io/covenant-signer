@@ -2,7 +2,9 @@ package signerapp_test
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/babylonchain/babylon/btcstaking"
@@ -14,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -224,4 +227,108 @@ func TestErrRequestNotCovenantMember(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, receivedSignature)
 	require.True(t, errors.Is(err, signerapp.ErrInvalidSigningRequest))
+}
+
+// tr(
+//   50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0,
+//   {
+//     and_v(v:pk(StakerKey),older(StakingTime)),
+//     and_v(
+//       and_v(
+//         v:pk(StakerKey),
+//         v:pk(FinalityProviderKey)
+//       ),
+//       sortedmulti_a(
+//         M,
+//         Cov1Key,
+//         ...,
+//         ...,
+//         CovNKey
+//       )
+//     ),
+//     and_v(
+//       v:pk(StakerKey),
+//       sortedmulti_a(
+//         M,
+//         Cov1Key,
+//         ...,
+//         CovNKey
+//       )
+//     )
+//   }
+// )
+
+func TestXxx(t *testing.T) {
+	regtest := chaincfg.RegressionNetParams
+	stakingTime := uint16(100)
+	covenantKey1 := "9b583777db87e11897421cdc57e866f43441d699a49a5ebc46fffc969077cc9d"
+	cv1kb, err := hex.DecodeString(covenantKey1)
+	require.NoError(t, err)
+	covenantKey2 := "20b8f01548e08dd50914d6f02b7e6de3d4d37983bed494fec0548dd639d2ea66"
+	cv2kb, err := hex.DecodeString(covenantKey2)
+	require.NoError(t, err)
+	fpKey := "f42e679d703105489fc393aa75a9123f7e034897548f37d9b5cd4b1b7fea3a46"
+	fpkb, err := hex.DecodeString(fpKey)
+	require.NoError(t, err)
+
+	_, ck1pub := btcec.PrivKeyFromBytes(cv1kb)
+	require.NoError(t, err)
+	_, ck2pub := btcec.PrivKeyFromBytes(cv2kb)
+	require.NoError(t, err)
+	_, fpkpub := btcec.PrivKeyFromBytes(fpkb)
+	require.NoError(t, err)
+
+	sHex, err := hex.DecodeString("03b6df9cc452123b137ae8ad15927ff78b7e4e010a97b8ef6732d6d9d692abd993")
+	require.NoError(t, err)
+	stakerPubKey, err := btcec.ParsePubKey(sHex)
+	require.NoError(t, err)
+	quorum := 1
+	info, err := btcstaking.BuildStakingInfo(
+		stakerPubKey,
+		[]*btcec.PublicKey{fpkpub},
+		[]*btcec.PublicKey{ck1pub, ck2pub},
+		uint32(quorum),
+		stakingTime,
+		btcutil.Amount(1000),
+		&regtest,
+	)
+
+	require.NoError(t, err)
+	require.NotNil(t, info)
+
+	_, addr, _, err := txscript.ExtractPkScriptAddrs(info.StakingOutput.PkScript, &regtest)
+	require.NoError(t, err)
+	fmt.Println(addr[0].EncodeAddress())
+
+	// stakerKeyHex := hex.EncodeToString(schnorr.SerializePubKey(stakerPubKey))
+	// fpKeyHex := hex.EncodeToString(schnorr.SerializePubKey(fpkpub))
+	// cov1KeyHex := hex.EncodeToString(schnorr.SerializePubKey(ck1pub))
+	// cov2KeyHex := hex.EncodeToString(schnorr.SerializePubKey(ck2pub))
+
+	// descstr := fmt.Sprintf(
+	// 	`
+	// tr(
+	// 	50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0,
+	// 	{
+	// 		and_v(v:pk(%s),older(%d)),
+	// 		and_v(and_v(v:pk(%s),v:pk(%s)),sortedmulti_a(%d,%s,%s)),
+	// 		and_v(v:pk(%s),sortedmulti_a(%d,%s,%s))
+	// 	}
+	// )
+	// `, stakerKeyHex, stakingTime, stakerKeyHex, fpKeyHex, quorum, cov1KeyHex, cov2KeyHex, stakerKeyHex, quorum, cov1KeyHex, cov2KeyHex,
+	// )
+
+	// fmt.Println(descstr)
+
+}
+
+func TestTag(t *testing.T) {
+
+	str := "bbmo"
+
+	bytes := []byte(str)
+
+	hex := hex.EncodeToString(bytes)
+	fmt.Println(hex)
+
 }
