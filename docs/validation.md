@@ -50,7 +50,7 @@ Given data received:
 - `covenant_pk`
 
 Functions provided by Babylon staking package -
-`"github.com/babylonchain/babylon/btcstaking"`:
+`"github.com/babylonlabs-io/babylon/btcstaking"`:
 - `ParseV0StakingTx(staking_tx, tag, covenant_keys, covenant_quorum, btc_network)`
 - `BuildUnbondingInfo(staker_pk, fp_pk, covenant_keys, covenant_quorum, unbonding_time, unbonding_value, btc_network)`
 - `BuildStakingInfo(staker_pk, fp_pk, covenant_keys, covenant_quorum, staking_time, staking_value, btc_network)`

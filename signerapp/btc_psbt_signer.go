@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	staking "github.com/babylonchain/babylon/btcstaking"
+	staking "github.com/babylonlabs-io/babylon/btcstaking"
 
-	"github.com/babylonchain/covenant-signer/btcclient"
+	"github.com/babylonlabs-io/covenant-signer/btcclient"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil/psbt"
 	"github.com/btcsuite/btcd/txscript"

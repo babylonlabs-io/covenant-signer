@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	m "github.com/babylonchain/covenant-signer/observability/metrics"
-	s "github.com/babylonchain/covenant-signer/signerapp"
+	m "github.com/babylonlabs-io/covenant-signer/observability/metrics"
+	s "github.com/babylonlabs-io/covenant-signer/signerapp"
 )
 
 type Handler struct {

@@ -12,11 +12,11 @@ RUN apk add --no-cache --update openssh git make build-base linux-headers libc-d
                                 libzmq-static libsodium-static gcc
 
 # Build
-WORKDIR /go/src/github.com/babylonchain/covenant-signer
+WORKDIR /go/src/github.com/babylonlabs-io/covenant-signer
 # Cache dependencies
-COPY go.mod go.sum /go/src/github.com/babylonchain/covenant-signer/
+COPY go.mod go.sum /go/src/github.com/babylonlabs-io/covenant-signer/
 # Copy the rest of the files
-COPY ./ /go/src/github.com/babylonchain/covenant-signer/
+COPY ./ /go/src/github.com/babylonlabs-io/covenant-signer/
 
 RUN CGO_LDFLAGS="$CGO_LDFLAGS -lstdc++ -lm -lsodium" \
     CGO_ENABLED=1 \
@@ -31,7 +31,7 @@ RUN addgroup --gid 1138 -S covenant-signer && adduser --uid 1138 -S covenant-sig
 
 RUN apk add bash curl jq
 
-COPY --from=builder /go/src/github.com/babylonchain/covenant-signer/build/covenant-signer /bin/covenant-signer
+COPY --from=builder /go/src/github.com/babylonlabs-io/covenant-signer/build/covenant-signer /bin/covenant-signer
 
 WORKDIR /home/covenant-signer
 RUN chown -R covenant-signer /home/covenant-signer

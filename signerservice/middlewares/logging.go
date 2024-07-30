@@ -1,9 +1,10 @@
 package middlewares
 
 import (
-	"github.com/babylonchain/covenant-signer/observability/tracing"
 	"net/http"
 	"time"
+
+	"github.com/babylonlabs-io/covenant-signer/observability/tracing"
 
 	"github.com/rs/zerolog/log"
 )
