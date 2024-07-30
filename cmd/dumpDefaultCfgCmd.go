@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/babylonchain/covenant-signer/config"
+	"github.com/babylonlabs-io/covenant-signer/config"
 	"github.com/spf13/cobra"
 )
 

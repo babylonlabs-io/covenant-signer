@@ -12,7 +12,7 @@ The Bitcoin Staking protocol introduces the ability for Bitcoin holders to lock
 their Bitcoin in a self-custodial Bitcoin Staking Script in order to get voting
 power in a Bitcoin secured PoS protocol.
 Among others, the
-[Bitcoin Staking Script](https://github.com/babylonchain/babylon/blob/v0.8.5/docs/staking-script.md)
+[Bitcoin Staking Script](https://github.com/babylonlabs-io/babylon/blob/v0.8.5/docs/staking-script.md)
 involves a pre-defined timelock for which the stake remains active.
 To enable a user experience comparable to typical PoS systems,
 the script allows for the stake to be on-demand unlocked prior to the timelock

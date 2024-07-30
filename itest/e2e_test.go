@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/babylonchain/babylon/btcstaking"
-	staking "github.com/babylonchain/babylon/btcstaking"
-	"github.com/babylonchain/babylon/testutil/datagen"
-	"github.com/babylonchain/networks/parameters/parser"
+	"github.com/babylonlabs-io/babylon/btcstaking"
+	staking "github.com/babylonlabs-io/babylon/btcstaking"
+	"github.com/babylonlabs-io/babylon/testutil/datagen"
+	"github.com/babylonlabs-io/networks/parameters/parser"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -25,13 +25,13 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/stretchr/testify/require"
 
-	"github.com/babylonchain/covenant-signer/btcclient"
-	"github.com/babylonchain/covenant-signer/config"
-	"github.com/babylonchain/covenant-signer/itest/containers"
-	"github.com/babylonchain/covenant-signer/observability/metrics"
-	"github.com/babylonchain/covenant-signer/signerapp"
-	"github.com/babylonchain/covenant-signer/signerservice"
-	"github.com/babylonchain/covenant-signer/signerservice/types"
+	"github.com/babylonlabs-io/covenant-signer/btcclient"
+	"github.com/babylonlabs-io/covenant-signer/config"
+	"github.com/babylonlabs-io/covenant-signer/itest/containers"
+	"github.com/babylonlabs-io/covenant-signer/observability/metrics"
+	"github.com/babylonlabs-io/covenant-signer/signerapp"
+	"github.com/babylonlabs-io/covenant-signer/signerservice"
+	"github.com/babylonlabs-io/covenant-signer/signerservice/types"
 )
 
 var (

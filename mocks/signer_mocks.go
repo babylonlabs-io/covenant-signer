@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	signerapp "github.com/babylonchain/covenant-signer/signerapp"
+	signerapp "github.com/babylonlabs-io/covenant-signer/signerapp"
 	chainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 	gomock "github.com/golang/mock/gomock"
 )

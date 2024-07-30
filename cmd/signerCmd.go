@@ -5,11 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/babylonchain/covenant-signer/btcclient"
-	"github.com/babylonchain/covenant-signer/config"
-	m "github.com/babylonchain/covenant-signer/observability/metrics"
-	"github.com/babylonchain/covenant-signer/signerapp"
-	"github.com/babylonchain/covenant-signer/signerservice"
+	"github.com/babylonlabs-io/covenant-signer/btcclient"
+	"github.com/babylonlabs-io/covenant-signer/config"
+	m "github.com/babylonlabs-io/covenant-signer/observability/metrics"
+	"github.com/babylonlabs-io/covenant-signer/signerapp"
+	"github.com/babylonlabs-io/covenant-signer/signerservice"
 )
 
 func init() {

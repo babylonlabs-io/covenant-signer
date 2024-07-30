@@ -3,7 +3,7 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/babylonchain/covenant-signer/observability/tracing"
+	"github.com/babylonlabs-io/covenant-signer/observability/tracing"
 )
 
 func TracingMiddleware(next http.Handler) http.Handler {

@@ -29,7 +29,7 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-docker:
-	$(DOCKER) build --tag babylonchain/covenant-signer -f Dockerfile \
+	$(DOCKER) build --tag babylonlabs-io/covenant-signer -f Dockerfile \
 		$(shell git rev-parse --show-toplevel)
 
 .PHONY: build build-docker install tests
