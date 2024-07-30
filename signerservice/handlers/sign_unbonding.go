@@ -6,9 +6,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/babylonchain/covenant-signer/signerapp"
-	"github.com/babylonchain/covenant-signer/signerservice/types"
-	"github.com/babylonchain/covenant-signer/utils"
+	"github.com/babylonlabs-io/covenant-signer/signerapp"
+	"github.com/babylonlabs-io/covenant-signer/signerservice/types"
+	"github.com/babylonlabs-io/covenant-signer/utils"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 )

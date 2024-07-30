@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/babylonchain/covenant-signer/btcclient"
+	"github.com/babylonlabs-io/covenant-signer/btcclient"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 

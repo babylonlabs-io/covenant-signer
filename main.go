@@ -1,6 +1,6 @@
 package main
 
-import "github.com/babylonchain/covenant-signer/cmd"
+import "github.com/babylonlabs-io/covenant-signer/cmd"
 
 func main() {
 	_ = cmd.Execute()

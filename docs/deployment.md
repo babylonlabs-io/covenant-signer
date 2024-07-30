@@ -305,10 +305,10 @@ Install Go by following the instructions on the official Go installation guide.
 To get started, clone the repository to your local machine from GitHub; please
 use the version according to the phase-1 system guidelines --
 you can find all versions in the official
-[releases](https://github.com/babylonchain/covenant-signer/releases) page.
+[releases](https://github.com/babylonlabs-io/covenant-signer/releases) page.
 
 ```shell
-git clone https://github.com/babylonchain/covenant-signer.git
+git clone https://github.com/babylonlabs-io/covenant-signer.git
 cd covenant-signer
 git checkout <release-tag>
 ```
@@ -396,7 +396,7 @@ between several services of the Babylon BTC Staking system. The file resides
 under the same directory as `config.toml`.
 
 The global parameters can be obtained from the parameters registry
-found [here](https://github.com/babylonchain/networks/). The parameters will be
+found [here](https://github.com/babylonlabs-io/networks/). The parameters will be
 fully specified once all covenant committee participants share their keys.
 
 ### 4.5. Boot
