@@ -156,6 +156,9 @@ func (s *SignerApp) SignUnbondingTransaction(
 
 	stakingOutputIndexFromUnbondingTx := unbondingTx.TxIn[0].PreviousOutPoint.Index
 
+	//#nosec G115 -- safe conversion from int to uint32, as this point we know that
+	// - staking transaction is valid BTC transaction that is part of the BTC ledger
+	// - BTC transactions won't have more that math.MaxUint32 outputs (in reality the max is closer to ~4k output)
 	if stakingOutputIndexFromUnbondingTx != uint32(parsedStakingTransaction.StakingOutputIdx) {
 		return nil, wrapInvalidSigningRequestError(fmt.Errorf("unbonding transaction has invalid input index"))
 	}
