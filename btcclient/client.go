@@ -352,6 +352,6 @@ func (w *BtcClient) BestBlockHeight() (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-
+	//#nosec G115 -- safe conversion, nubmer of blocks is always positive and less than math.MaxUint32
 	return uint32(count), nil
 }

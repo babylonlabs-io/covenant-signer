@@ -5,9 +5,9 @@ import "time"
 type ServerConfig struct {
 	Host             string `mapstructure:"host"`
 	Port             int    `mapstructure:"port"`
-	WriteTimeout     uint   `mapstructure:"write-timeout"`
-	ReadTimeout      uint   `mapstructure:"read-timeout"`
-	IdleTimeout      uint   `mapstructure:"idle-timeout"`
+	WriteTimeout     uint32 `mapstructure:"write-timeout"`
+	ReadTimeout      uint32 `mapstructure:"read-timeout"`
+	IdleTimeout      uint32 `mapstructure:"idle-timeout"`
 	MaxContentLength uint32 `mapstructure:"max-content-length"`
 }
 

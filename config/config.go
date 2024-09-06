@@ -11,6 +11,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	folderPermissions = 0750
+)
+
 type Config struct {
 	// TODO: Separate config for signing node and for full node
 	BtcNodeConfig   BtcConfig     `mapstructure:"btc-config"`
@@ -149,7 +153,7 @@ func WriteConfigToFile(pathToConfFile string, conf *Config) error {
 	dirPath, _ := filepath.Split(pathToConfFile)
 
 	if _, err := os.Stat(pathToConfFile); os.IsNotExist(err) {
-		if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+		if err := os.MkdirAll(dirPath, folderPermissions); err != nil {
 			return fmt.Errorf("couldn't make config: %v", err)
 		}
 
