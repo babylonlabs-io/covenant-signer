@@ -86,7 +86,7 @@ func (s *SignerApp) SignUnbondingTransaction(
 	stakerUnbondingSig *schnorr.Signature,
 	covnentSignerPubKey *btcec.PublicKey,
 ) (*schnorr.Signature, error) {
-	if err := btcstaking.IsSimpleTransfer(unbondingTx); err != nil {
+	if err := btcstaking.CheckPreSignedUnbondingTxSanity(unbondingTx); err != nil {
 		return nil, wrapInvalidSigningRequestError(err)
 	}
 

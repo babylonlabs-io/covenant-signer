@@ -42,7 +42,7 @@ require (
 )
 
 require (
-	github.com/babylonlabs-io/babylon v0.11.0
+	github.com/babylonlabs-io/babylon v0.12.1
 	github.com/babylonlabs-io/networks/parameters v0.2.2
 	github.com/btcsuite/btcd/btcutil/psbt v1.1.8
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
