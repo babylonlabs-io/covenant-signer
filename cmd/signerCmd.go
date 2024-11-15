@@ -49,14 +49,20 @@ var runSignerCmd = &cobra.Command{
 
 		chainInfo := signerapp.NewBitcoindChainInfo(fullNodeClient)
 
-		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
+		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig.ToBtcConfig())
 
 		if err != nil {
 			return err
 		}
 
-		// TODO: Add options to use customn remote signers
-		signer := signerapp.NewPsbtSigner(signerClient)
+		var signer signerapp.ExternalBtcSigner
+		if parsedConfig.BtcSignerConfig.SignerType == config.PsbtSigner {
+			fmt.Println("using psbt signer")
+			signer = signerapp.NewPsbtSigner(signerClient)
+		} else if parsedConfig.BtcSignerConfig.SignerType == config.PrivKeySigner {
+			fmt.Println("using privkey signer")
+			signer = signerapp.NewPrivKeySigner(signerClient)
+		}
 
 		app := signerapp.NewSignerApp(
 			signer,

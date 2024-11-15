@@ -16,17 +16,16 @@ const (
 )
 
 type Config struct {
-	// TODO: Separate config for signing node and for full node
-	BtcNodeConfig   BtcConfig     `mapstructure:"btc-config"`
-	BtcSignerConfig BtcConfig     `mapstructure:"btc-signer-config"`
-	Server          ServerConfig  `mapstructure:"server-config"`
-	Metrics         MetricsConfig `mapstructure:"metrics"`
+	BtcNodeConfig   BtcConfig       `mapstructure:"btc-config"`
+	BtcSignerConfig BtcSignerConfig `mapstructure:"btc-signer-config"`
+	Server          ServerConfig    `mapstructure:"server-config"`
+	Metrics         MetricsConfig   `mapstructure:"metrics"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
 		BtcNodeConfig:   *DefaultBtcConfig(),
-		BtcSignerConfig: *DefaultBtcConfig(),
+		BtcSignerConfig: *DefaultBtcSignerConfig(),
 		Server:          *DefaultServerConfig(),
 		Metrics:         *DefaultMetricsConfig(),
 	}
@@ -34,7 +33,7 @@ func DefaultConfig() *Config {
 
 type ParsedConfig struct {
 	BtcNodeConfig   *ParsedBtcConfig
-	BtcSignerConfig *ParsedBtcConfig
+	BtcSignerConfig *ParsedBtcSignerConfig
 	ServerConfig    *ParsedServerConfig
 	MetricsConfig   *ParsedMetricsConfig
 }
@@ -100,6 +99,8 @@ user = "{{ .BtcSignerConfig.User }}"
 pass = "{{ .BtcSignerConfig.Pass }}"
 # Btc network (testnet3|mainnet|regtest|simnet|signet)
 network = "{{ .BtcSignerConfig.Network }}"
+# Signer type (psbt|privkey)
+signer-type = "{{ .BtcSignerConfig.SignerType }}"
 
 [server-config]
 # The address to listen on
