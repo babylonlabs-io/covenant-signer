@@ -1,4 +1,4 @@
-FROM golang:1.22.3-alpine as builder
+FROM golang:1.22.7-alpine as builder
 
 # Version to build. Default is the Git HEAD.
 ARG VERSION="HEAD"
@@ -6,10 +6,12 @@ ARG VERSION="HEAD"
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
 
-
+# hadolint ignore=DL3018
 RUN apk add --no-cache --update openssh git make build-base linux-headers libc-dev \
                                 pkgconfig zeromq-dev musl-dev alpine-sdk libsodium-dev \
-                                libzmq-static libsodium-static gcc
+                                libzmq-static libsodium-static gcc \
+                                && rm -rf /var/cache/apk/*
+
 
 # Build
 WORKDIR /go/src/github.com/babylonlabs-io/covenant-signer
@@ -25,11 +27,11 @@ RUN CGO_LDFLAGS="$CGO_LDFLAGS -lstdc++ -lm -lsodium" \
     make build
 
 # FINAL IMAGE
-FROM alpine:3.16 AS run
+FROM alpine:3.20 AS run
 
-RUN addgroup --gid 1138 -S covenant-signer && adduser --uid 1138 -S covenant-signer -G covenant-signer
-
-RUN apk add bash curl jq
+# hadolint ignore=DL3018
+RUN addgroup --gid 1138 -S covenant-signer && adduser --uid 1138 -S covenant-signer -G covenant-signer \
+    && apk --no-cache add bash curl jq && rm -rf /var/cache/apk/*
 
 COPY --from=builder /go/src/github.com/babylonlabs-io/covenant-signer/build/covenant-signer /bin/covenant-signer
 
