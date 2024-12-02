@@ -135,7 +135,8 @@ func NewValidTestData(t *testing.T, params *signerapp.BabylonParams) *TestData {
 	)
 	require.NoError(t, err)
 	stakingTxHash := stakingTx.TxHash()
-	unbondingTx := wire.NewMsgTx(wire.TxVersion)
+	// tx must have version 2
+	unbondingTx := wire.NewMsgTx(2)
 	unbondingTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&stakingTxHash, 0), nil, nil))
 	unbondingTx.AddTxOut(unbondingInfo.UnbondingOutput)
 
