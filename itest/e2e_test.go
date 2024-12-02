@@ -287,6 +287,7 @@ type unbondingTxWithMetadata struct {
 func (tm *TestManager) createUnbondingTx(
 	si *stakingTxSigInfo,
 	d *stakingData,
+	txVersion int32,
 ) *unbondingTxWithMetadata {
 
 	unbondingInfo, err := staking.BuildUnbondingInfo(
@@ -299,39 +300,13 @@ func (tm *TestManager) createUnbondingTx(
 		netParams,
 	)
 	require.NoError(tm.t, err)
-	unbondingTx := wire.NewMsgTx(2)
+	unbondingTx := wire.NewMsgTx(txVersion)
 	unbondingTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(si.stakingTxHash, 0), nil, nil))
 	unbondingTx.AddTxOut(unbondingInfo.UnbondingOutput)
 
 	return &unbondingTxWithMetadata{
 		unbondingTx: unbondingTx,
 	}
-}
-
-func (tm *TestManager) createNUnbondingTransactions(n int, d *stakingData) ([]*unbondingTxWithMetadata, []*wire.MsgTx) {
-	var infos []*stakingTxSigInfo
-	var sendStakingTransactions []*wire.MsgTx
-
-	for i := 0; i < n; i++ {
-		sInfo := tm.sendStakingTxToBtc(d)
-		conf, status, err := tm.btcClient.TxDetails(sInfo.stakingTxHash, sInfo.stakingOutput.PkScript)
-		require.NoError(tm.t, err)
-		require.Equal(tm.t, btcclient.TxInChain, status)
-		infos = append(infos, sInfo)
-		sendStakingTransactions = append(sendStakingTransactions, conf.Tx)
-	}
-
-	var unbondingTxs []*unbondingTxWithMetadata
-	for _, i := range infos {
-		info := i
-		ubs := tm.createUnbondingTx(
-			info,
-			d,
-		)
-		unbondingTxs = append(unbondingTxs, ubs)
-	}
-
-	return unbondingTxs, sendStakingTransactions
 }
 
 func TestSigningUnbondingTx(t *testing.T) {
@@ -341,7 +316,7 @@ func TestSigningUnbondingTx(t *testing.T) {
 
 	stakingTxInfo := tm.sendStakingTxToBtc(stakingData)
 
-	unb := tm.createUnbondingTx(stakingTxInfo, stakingData)
+	unb := tm.createUnbondingTx(stakingTxInfo, stakingData, 2)
 
 	// staker signs unbonding tx
 	unbondingPathInfo, err := stakingTxInfo.stakingInfo.UnbondingPathSpendInfo()
@@ -380,6 +355,41 @@ func TestSigningUnbondingTx(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestRejectSigningUnbondingTxWithVersion1(t *testing.T) {
+	tm := StartManager(t, 100)
+
+	stakingData := defaultStakingData()
+
+	stakingTxInfo := tm.sendStakingTxToBtc(stakingData)
+
+	unb := tm.createUnbondingTx(stakingTxInfo, stakingData, 1)
+
+	// staker signs unbonding tx
+	unbondingPathInfo, err := stakingTxInfo.stakingInfo.UnbondingPathSpendInfo()
+	require.NoError(t, err)
+
+	stakerSig, err := btcstaking.SignTxWithOneScriptSpendInputFromTapLeaf(
+		unb.unbondingTx,
+		stakingTxInfo.stakingOutput,
+		tm.stakerPrivKey,
+		unbondingPathInfo.RevealedLeaf,
+	)
+	require.NoError(t, err)
+
+	sig, err := signerservice.RequestCovenantSignaure(
+		context.Background(),
+		tm.SigningServerUrl(),
+		10*time.Second,
+		unb.unbondingTx,
+		stakerSig,
+		tm.localCovenantPubKey,
+		stakingTxInfo.stakingOutput.PkScript,
+	)
+
+	require.Error(t, err)
+	require.Nil(t, sig)
+}
+
 func TestProperResponseForInvalidRequest(t *testing.T) {
 	tm := StartManager(t, 100)
 
@@ -387,7 +397,7 @@ func TestProperResponseForInvalidRequest(t *testing.T) {
 
 	stakingTxInfo := tm.sendStakingTxToBtc(stakingData)
 
-	unb := tm.createUnbondingTx(stakingTxInfo, stakingData)
+	unb := tm.createUnbondingTx(stakingTxInfo, stakingData, 2)
 
 	// staker signs unbonding tx
 	unbondingPathInfo, err := stakingTxInfo.stakingInfo.UnbondingPathSpendInfo()
