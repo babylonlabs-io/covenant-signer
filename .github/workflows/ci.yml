@@ -9,12 +9,29 @@ jobs:
   lint_test:
     uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.1.0
     with:
+<<<<<<< HEAD
      run-unit-tests: true
      run-integration-tests: true
      run-lint: true
+=======
+      go-version: '1.23'
+      go-lint-version: 'v1.60.2'
+      run-unit-tests: true
+      run-integration-tests: true
+      run-lint: true
+      run-build: true
+      run-gosec: true
+      gosec-args: "-exclude-generated ./..."
+>>>>>>> 9e4ea16 (bump babylon version to reject version to accept only version 2 unbonding transactions (#18))
 
   docker_pipeline:
     uses: babylonlabs-io/.github/.github/workflows/reusable_docker_pipeline.yml@v0.1.0
     secrets: inherit
     with:
+<<<<<<< HEAD
      publish: false
+=======
+      publish: false
+      dockerfile: ./Dockerfile
+      repoName: covenant-signer
+>>>>>>> 9e4ea16 (bump babylon version to reject version to accept only version 2 unbonding transactions (#18))
