@@ -138,8 +138,7 @@ port = {{ .Metrics.Port }}
 
 [signer-app-config]
 # The maximum height of staking transaction
-# Max value is 4294967295. Setting it to more than that will result in wrapping
-# around uint32 type.
+# Max value is 4294967295
 max-staking-transaction-height = {{ .SignerAppConfig.MaxStakingTransactionHeight }}
 `
 

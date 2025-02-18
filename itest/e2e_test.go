@@ -104,7 +104,7 @@ func StartManager(
 	appConfig.BtcNodeConfig.Pass = "pass"
 	appConfig.BtcNodeConfig.Network = netParams.Name
 
-	appConfig.SignerAppConfig.MaxStakingTransactionHeight = maxStakingInclusionHeight
+	appConfig.SignerAppConfig.MaxStakingTransactionHeight = int(maxStakingInclusionHeight)
 
 	fakeParsedConfig, err := appConfig.Parse()
 	require.NoError(t, err)

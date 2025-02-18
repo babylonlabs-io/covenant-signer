@@ -1,9 +1,12 @@
 package config
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type SignerAppConfig struct {
-	MaxStakingTransactionHeight uint32 `mapstructure:"max-staking-transaction-height"`
+	MaxStakingTransactionHeight int `mapstructure:"max-staking-transaction-height"`
 }
 
 type ParsedSignerAppConfig struct {
@@ -11,9 +14,16 @@ type ParsedSignerAppConfig struct {
 }
 
 func (c *SignerAppConfig) Parse() (*ParsedSignerAppConfig, error) {
-	// TODO Add some validations
+	if c.MaxStakingTransactionHeight < 0 {
+		return nil, fmt.Errorf("max staking transaction height is too small. Min value is 0")
+	}
+
+	if c.MaxStakingTransactionHeight > math.MaxUint32 {
+		return nil, fmt.Errorf("max staking transaction height is too large. Max value is %d", math.MaxUint32)
+	}
+
 	return &ParsedSignerAppConfig{
-		MaxStakingTransactionHeight: c.MaxStakingTransactionHeight,
+		MaxStakingTransactionHeight: uint32(c.MaxStakingTransactionHeight),
 	}, nil
 }
 
