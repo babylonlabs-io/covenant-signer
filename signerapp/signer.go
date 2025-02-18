@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/babylonlabs-io/babylon/btcstaking"
+	"github.com/babylonlabs-io/covenant-signer/config"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
@@ -27,6 +28,7 @@ type SignerApp struct {
 	s   ExternalBtcSigner
 	r   BtcChainInfo
 	p   BabylonParamsRetriever
+	cfg *config.ParsedSignerAppConfig
 	net *chaincfg.Params
 }
 
@@ -34,12 +36,14 @@ func NewSignerApp(
 	s ExternalBtcSigner,
 	r BtcChainInfo,
 	p BabylonParamsRetriever,
+	cfg *config.ParsedSignerAppConfig,
 	net *chaincfg.Params,
 ) *SignerApp {
 	return &SignerApp{
 		s:   s,
 		r:   r,
 		p:   p,
+		cfg: cfg,
 		net: net,
 	}
 }
@@ -107,6 +111,14 @@ func (s *SignerApp) SignUnbondingTransaction(
 	if err != nil {
 		return nil, err
 	}
+
+	if stakingTxInfo.TxInclusionHeight > s.cfg.MaxStakingTransactionHeight {
+		return nil, wrapInvalidSigningRequestError(fmt.Errorf("staking transaction is inlcluded to late in btc. Max allowed height is %d, but staking tx height is %d",
+			s.cfg.MaxStakingTransactionHeight,
+			stakingTxInfo.TxInclusionHeight,
+		))
+	}
+
 	bestBlock, err := s.r.BestBlockHeight(ctx)
 
 	if err != nil {

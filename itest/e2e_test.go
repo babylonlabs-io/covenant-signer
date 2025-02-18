@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"net/http"
 	"testing"
@@ -77,7 +78,9 @@ func defaultStakingData() *stakingData {
 
 func StartManager(
 	t *testing.T,
-	numMatureOutputsInWallet uint32) *TestManager {
+	numMatureOutputsInWallet uint32,
+	maxStakingInclusionHeight uint32,
+) *TestManager {
 	m, err := containers.NewManager()
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -100,6 +103,8 @@ func StartManager(
 	appConfig.BtcNodeConfig.User = "user"
 	appConfig.BtcNodeConfig.Pass = "pass"
 	appConfig.BtcNodeConfig.Network = netParams.Name
+
+	appConfig.SignerAppConfig.MaxStakingTransactionHeight = maxStakingInclusionHeight
 
 	fakeParsedConfig, err := appConfig.Parse()
 	require.NoError(t, err)
@@ -186,7 +191,8 @@ func StartManager(
 	app := signerapp.NewSignerApp(
 		signer,
 		chainInfo,
-		&signerapp.VersionedParamsRetriever{parsedGlobalParams},
+		&signerapp.VersionedParamsRetriever{ParsedGlobalParams: parsedGlobalParams},
+		parsedconfig.SignerAppConfig,
 		netParams,
 	)
 
@@ -310,7 +316,7 @@ func (tm *TestManager) createUnbondingTx(
 }
 
 func TestSigningUnbondingTx(t *testing.T) {
-	tm := StartManager(t, 100)
+	tm := StartManager(t, 100, math.MaxUint32)
 
 	stakingData := defaultStakingData()
 
@@ -356,7 +362,7 @@ func TestSigningUnbondingTx(t *testing.T) {
 }
 
 func TestRejectSigningUnbondingTxWithVersion1(t *testing.T) {
-	tm := StartManager(t, 100)
+	tm := StartManager(t, 100, math.MaxUint32)
 
 	stakingData := defaultStakingData()
 
@@ -391,7 +397,7 @@ func TestRejectSigningUnbondingTxWithVersion1(t *testing.T) {
 }
 
 func TestProperResponseForInvalidRequest(t *testing.T) {
-	tm := StartManager(t, 100)
+	tm := StartManager(t, 100, math.MaxUint32)
 
 	stakingData := defaultStakingData()
 
@@ -432,7 +438,7 @@ func TestProperResponseForInvalidRequest(t *testing.T) {
 }
 
 func TestRejectToLargeRequest(t *testing.T) {
-	tm := StartManager(t, 100)
+	tm := StartManager(t, 100, math.MaxUint32)
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	tmContentLimit := tm.signerConfig.Server.MaxContentLength
 	size := tmContentLimit + 1
@@ -463,4 +469,42 @@ func TestRejectToLargeRequest(t *testing.T) {
 	require.NotNil(t, res)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusRequestEntityTooLarge, res.StatusCode)
+}
+
+func TestRejectStakingTxTooHigh(t *testing.T) {
+	// Set max staking transaction height to 0, which means that covenant signer
+	// will reject all signing requests
+	tm := StartManager(t, 100, 0)
+
+	stakingData := defaultStakingData()
+
+	stakingTxInfo := tm.sendStakingTxToBtc(stakingData)
+
+	unb := tm.createUnbondingTx(stakingTxInfo, stakingData, 2)
+
+	// staker signs unbonding tx
+	unbondingPathInfo, err := stakingTxInfo.stakingInfo.UnbondingPathSpendInfo()
+	require.NoError(t, err)
+
+	stakerSig, err := btcstaking.SignTxWithOneScriptSpendInputFromTapLeaf(
+		unb.unbondingTx,
+		stakingTxInfo.stakingOutput,
+		tm.stakerPrivKey,
+		unbondingPathInfo.RevealedLeaf,
+	)
+	require.NoError(t, err)
+
+	sig, err := signerservice.RequestCovenantSignaure(
+		context.Background(),
+		tm.SigningServerUrl(),
+		10*time.Second,
+		unb.unbondingTx,
+		stakerSig,
+		tm.localCovenantPubKey,
+		stakingTxInfo.stakingOutput.PkScript,
+	)
+
+	require.Error(t, err)
+	require.Nil(t, sig)
+	require.EqualError(t, err, "signing request failed. status code: 400, message: {\"errorCode\":\"BAD_REQUEST\",\"message\":\"staking transaction is inlcluded to late in btc. Max allowed height is 0, but staking tx height is 201: invalid signing request\"}")
 }
