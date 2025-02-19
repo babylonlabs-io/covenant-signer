@@ -62,6 +62,7 @@ var runSignerCmd = &cobra.Command{
 			signer,
 			chainInfo,
 			parsedGlobalParams,
+			parsedConfig.SignerAppConfig,
 			parsedConfig.BtcNodeConfig.Network,
 		)
 

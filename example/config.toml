@@ -52,3 +52,8 @@ max-content-length = 8192
 host = "127.0.0.1"
 # The prometheus server port
 port = 2112
+
+[signer-app-config]
+# The maximum height of staking transaction
+# Max value is 4294967295
+max-staking-transaction-height = 4294967295
