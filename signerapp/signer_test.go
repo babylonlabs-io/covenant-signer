@@ -3,9 +3,11 @@ package signerapp_test
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/babylonlabs-io/babylon/btcstaking"
+	"github.com/babylonlabs-io/covenant-signer/config"
 	"github.com/babylonlabs-io/covenant-signer/mocks"
 	"github.com/babylonlabs-io/covenant-signer/signerapp"
 	"github.com/babylonlabs-io/networks/parameters/parser"
@@ -58,6 +60,7 @@ type MockedDependencies struct {
 	bi     *mocks.MockBtcChainInfo
 	s      *mocks.MockExternalBtcSigner
 	params *signerapp.BabylonParams
+	cfg    *config.ParsedSignerAppConfig
 }
 
 func parserParamsToBabylonParams(
@@ -78,11 +81,15 @@ func parserParamsToBabylonParams(
 
 func NewMockedDependencies(t *testing.T) *MockedDependencies {
 	ctrl := gomock.NewController(t)
+	cfg := config.ParsedSignerAppConfig{
+		MaxStakingTransactionHeight: math.MaxUint32,
+	}
 	return &MockedDependencies{
 		pr:     mocks.NewMockBabylonParamsRetriever(ctrl),
 		bi:     mocks.NewMockBtcChainInfo(ctrl),
 		s:      mocks.NewMockExternalBtcSigner(ctrl),
 		params: parserParamsToBabylonParams(parsed.Versions[0]),
+		cfg:    &cfg,
 	}
 }
 
@@ -162,7 +169,7 @@ func NewValidTestData(t *testing.T, params *signerapp.BabylonParams) *TestData {
 
 func TestValidSigningRequest(t *testing.T) {
 	deps := NewMockedDependencies(t)
-	signerApp := signerapp.NewSignerApp(deps.s, deps.bi, deps.pr, &net)
+	signerApp := signerapp.NewSignerApp(deps.s, deps.bi, deps.pr, deps.cfg, &net)
 	validData := NewValidTestData(t, deps.params)
 
 	deps.bi.EXPECT().TxByHash(
@@ -196,7 +203,7 @@ func TestValidSigningRequest(t *testing.T) {
 
 func TestErrRequestNotCovenantMember(t *testing.T) {
 	deps := NewMockedDependencies(t)
-	signerApp := signerapp.NewSignerApp(deps.s, deps.bi, deps.pr, &net)
+	signerApp := signerapp.NewSignerApp(deps.s, deps.bi, deps.pr, deps.cfg, &net)
 	validData := NewValidTestData(t, deps.params)
 
 	deps.bi.EXPECT().TxByHash(
@@ -220,6 +227,37 @@ func TestErrRequestNotCovenantMember(t *testing.T) {
 		validData.UnbondingTx,
 		validData.UnbondingTxStakerSig,
 		unknownCovenantMember.PubKey(),
+	)
+
+	require.Error(t, err)
+	require.Nil(t, receivedSignature)
+	require.True(t, errors.Is(err, signerapp.ErrInvalidSigningRequest))
+}
+
+func TestErrStakingTxTooHigh(t *testing.T) {
+	deps := NewMockedDependencies(t)
+	// Set max staking transaction height to 100
+	deps.cfg.MaxStakingTransactionHeight = 100
+	signerApp := signerapp.NewSignerApp(deps.s, deps.bi, deps.pr, deps.cfg, &net)
+	validData := NewValidTestData(t, deps.params)
+
+	// Return staking transaction included at height 200 (above max allowed)
+	deps.bi.EXPECT().TxByHash(
+		gomock.Any(),
+		&validData.UnbondingTx.TxIn[0].PreviousOutPoint.Hash,
+		validData.StakingInfo.StakingOutput.PkScript).Return(
+		&signerapp.TxInfo{
+			Tx:                validData.StakingTransaction,
+			TxInclusionHeight: 200,
+		}, nil,
+	)
+
+	receivedSignature, err := signerApp.SignUnbondingTransaction(
+		context.Background(),
+		validData.StakingInfo.StakingOutput.PkScript,
+		validData.UnbondingTx,
+		validData.UnbondingTxStakerSig,
+		deps.params.CovenantPublicKeys[0],
 	)
 
 	require.Error(t, err)

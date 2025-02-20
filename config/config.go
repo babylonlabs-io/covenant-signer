@@ -17,10 +17,11 @@ const (
 
 type Config struct {
 	// TODO: Separate config for signing node and for full node
-	BtcNodeConfig   BtcConfig     `mapstructure:"btc-config"`
-	BtcSignerConfig BtcConfig     `mapstructure:"btc-signer-config"`
-	Server          ServerConfig  `mapstructure:"server-config"`
-	Metrics         MetricsConfig `mapstructure:"metrics"`
+	BtcNodeConfig   BtcConfig       `mapstructure:"btc-config"`
+	BtcSignerConfig BtcConfig       `mapstructure:"btc-signer-config"`
+	Server          ServerConfig    `mapstructure:"server-config"`
+	Metrics         MetricsConfig   `mapstructure:"metrics"`
+	SignerAppConfig SignerAppConfig `mapstructure:"signer-app-config"`
 }
 
 func DefaultConfig() *Config {
@@ -29,6 +30,7 @@ func DefaultConfig() *Config {
 		BtcSignerConfig: *DefaultBtcConfig(),
 		Server:          *DefaultServerConfig(),
 		Metrics:         *DefaultMetricsConfig(),
+		SignerAppConfig: *DefaultSignerAppConfig(),
 	}
 }
 
@@ -37,6 +39,7 @@ type ParsedConfig struct {
 	BtcSignerConfig *ParsedBtcConfig
 	ServerConfig    *ParsedServerConfig
 	MetricsConfig   *ParsedMetricsConfig
+	SignerAppConfig *ParsedSignerAppConfig
 }
 
 func (cfg *Config) Parse() (*ParsedConfig, error) {
@@ -63,11 +66,18 @@ func (cfg *Config) Parse() (*ParsedConfig, error) {
 		return nil, err
 	}
 
+	signerAppConfig, err := cfg.SignerAppConfig.Parse()
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &ParsedConfig{
 		BtcNodeConfig:   btcConfig,
 		BtcSignerConfig: btcSignerConfig,
 		ServerConfig:    serverConfig,
 		MetricsConfig:   metricsConfig,
+		SignerAppConfig: signerAppConfig,
 	}, nil
 }
 
@@ -125,6 +135,11 @@ max-content-length = {{ .Server.MaxContentLength }}
 host = "{{ .Metrics.Host }}"
 # The prometheus server port
 port = {{ .Metrics.Port }}
+
+[signer-app-config]
+# The maximum height of staking transaction
+# Max value is 4294967295
+max-staking-transaction-height = {{ .SignerAppConfig.MaxStakingTransactionHeight }}
 `
 
 var configTemplate *template.Template
