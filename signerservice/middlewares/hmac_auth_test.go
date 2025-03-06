@@ -23,7 +23,11 @@ func TestHMACAuthMiddleware(t *testing.T) {
 
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		_, err := w.Write([]byte("success"))
+		if err != nil {
+			t.Fatalf("Failed to write response: %v", err)
+		}
+
 	})
 
 	makeRequestWithHMAC := func(t *testing.T, body []byte, hmacKey, hmacHeader string) *http.Request {

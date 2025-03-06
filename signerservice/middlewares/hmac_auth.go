@@ -67,6 +67,9 @@ func RespondWithError(w http.ResponseWriter, appErr *types.Error) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to generate error response"))
+		_, err := w.Write([]byte("Failed to generate error response"))
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to write error response")
+		}
 	}
 }
