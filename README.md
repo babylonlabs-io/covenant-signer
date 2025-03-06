@@ -77,6 +77,54 @@ to consist of the following components:
 > Babylon node. The covenant-signer is used in systems in which there is no
 > underlying Babylon chain to read from.
 
+## Security Features
+
+### HMAC Authentication
+
+The covenant signer implements HMAC (Hash-based Message Authentication Code) authentication to 
+ensure that only authorized clients can request signatures. This prevents unauthorized 
+signature requests from potentially malicious actors.
+
+#### Configuration
+
+HMAC authentication is configured via the server configuration in the covenant signer's 
+configuration file:
+
+```toml
+[server-config]
+# ... other server configuration options ...
+
+# HMAC key for request authentication
+# Leave empty to disable HMAC authentication
+hmac-key = "your-secure-random-key"
+```
+
+The HMAC key should be:
+- A strong, randomly generated secret
+- Shared between the covenant emulator and covenant signer
+- Kept secure and confidential
+- Changed periodically according to your security policies
+
+You can generate a secure random key with:
+
+```bash
+openssl rand -hex 32
+```
+
+#### Client Usage
+
+When making requests to the covenant signer, clients must include an HMAC signature 
+in the `X-Covenant-HMAC` HTTP header. The HMAC is calculated using SHA-256 over the 
+complete request body, using the shared secret key.
+
+#### Security Considerations
+
+- **Key Secrecy**: The HMAC key must be kept confidential. Compromise of this key would 
+  allow an attacker to forge valid signature requests.
+  
+- **Constant-Time Comparison**: The implementation uses constant-time comparison to prevent 
+  timing attacks.
+
 ## Participation in the Committee
 
 Participating in the covenant emulation committee requires:

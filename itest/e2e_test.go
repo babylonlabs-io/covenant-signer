@@ -344,6 +344,7 @@ func TestSigningUnbondingTx(t *testing.T) {
 		stakerSig,
 		tm.localCovenantPubKey,
 		stakingTxInfo.stakingOutput.PkScript,
+		"",
 	)
 
 	require.NoError(t, err)
@@ -390,6 +391,7 @@ func TestRejectSigningUnbondingTxWithVersion1(t *testing.T) {
 		stakerSig,
 		tm.localCovenantPubKey,
 		stakingTxInfo.stakingOutput.PkScript,
+		"",
 	)
 
 	require.Error(t, err)
@@ -430,6 +432,7 @@ func TestProperResponseForInvalidRequest(t *testing.T) {
 		badSig,
 		tm.localCovenantPubKey,
 		stakingTxInfo.stakingOutput.PkScript,
+		"",
 	)
 
 	require.Error(t, err)
@@ -502,6 +505,7 @@ func TestRejectStakingTxTooHigh(t *testing.T) {
 		stakerSig,
 		tm.localCovenantPubKey,
 		stakingTxInfo.stakingOutput.PkScript,
+		"",
 	)
 
 	require.Error(t, err)
