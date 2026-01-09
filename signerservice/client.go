@@ -12,8 +12,8 @@ import (
 
 	"github.com/babylonlabs-io/covenant-signer/signerservice/handlers"
 	"github.com/babylonlabs-io/covenant-signer/signerservice/types"
-
 	"github.com/babylonlabs-io/covenant-signer/utils"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/wire"
@@ -32,6 +32,7 @@ func RequestCovenantSignaure(
 	stakerUnbondingSig *schnorr.Signature,
 	covenantMemberPublicKey *btcec.PublicKey,
 	stakingTransactionPkScript []byte,
+	hmacKey string,
 ) (*schnorr.Signature, error) {
 	unbondingTxHex, err := utils.SerializeBTCTxToHex(unbondingTx)
 
@@ -68,6 +69,18 @@ func RequestCovenantSignaure(
 
 	// use json
 	httpRequest.Header.Set("Content-Type", "application/json")
+
+	// Add HMAC header if a key is provided
+	if hmacKey != "" {
+		hmacValue, err := utils.GenerateHMAC(hmacKey, marshalled)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate HMAC: %w", err)
+		}
+
+		if hmacValue != "" {
+			httpRequest.Header.Set(utils.HeaderCovenantHMAC, hmacValue)
+		}
+	}
 
 	client := http.Client{Timeout: timeout}
 	// send the request
